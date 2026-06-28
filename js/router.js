@@ -77,15 +77,20 @@ export function renderLayout() {
     const currentUser = getFreshUser();
     const lembaga = (window.appState && window.appState.lembaga && window.appState.lembaga[0]) ? window.appState.lembaga[0] : {}; 
     const header = document.getElementById('app-header');
+    
     header.innerHTML = `
         <div class="flex items-center gap-3 w-full max-w-[60%]">
-            ${lembaga.logo ? `<img src="${lembaga.logo}" class="h-8 md:h-10 w-auto object-contain rounded-lg shadow-sm">` : '<i class="fa-solid fa-school text-indigo-500 text-2xl"></i>'}
+            <button onclick="window.kembaliKeStart()" id="btn-win-start" class="hidden text-white text-2xl md:text-3xl mr-3 hover:scale-110 transition drop-shadow-md" title="Kembali ke Start Screen"><i class="fa-brands fa-windows"></i></button>
+            ${lembaga.logo ? `<img src="${lembaga.logo}" class="h-8 md:h-10 w-auto object-contain rounded-lg shadow-sm" id="header-logo-img">` : '<i class="fa-solid fa-school text-indigo-500 text-2xl" id="header-logo-icon"></i>'}
             <div class="flex flex-col truncate">
                 <span class="font-black text-sm md:text-lg uppercase text-indigo-900 truncate" id="header-title">DASHBOARD</span>
-                <span class="text-[10px] md:text-xs font-bold text-slate-500 truncate uppercase tracking-widest">${lembaga.namaLembaga || 'Sistem Informasi Internal'}</span>
+                <span class="text-[10px] md:text-xs font-bold text-slate-500 truncate uppercase tracking-widest" id="header-subtitle">${lembaga.namaLembaga || 'Sistem Informasi Internal'}</span>
             </div>
         </div>
         <div class="flex items-center space-x-2 md:space-x-4 shrink-0">
+            <button onclick="window.location.reload(true)" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs font-black shadow-sm transition" title="Muat Ulang Paksa (Hard Refresh)">
+                <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
             <button onclick="window.navigate('absensi')" class="flex items-center bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs font-black shadow-md transition transform hover:-translate-y-0.5"><i class="fa-solid fa-fingerprint md:mr-2"></i> <span class="hidden md:inline">Presensi</span></button>
             <div class="flex items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 px-3 py-1.5 rounded-xl transition border border-transparent hover:border-slate-200 dark:hover:border-slate-600" onclick="window.navigate('pegawai')">
                 <img id="header-foto-profil" src="${(currentUser.fotoProfil && currentUser.fotoProfil.length > 0) ? currentUser.fotoProfil[0] : `https://ui-avatars.com/api/?name=${currentUser.nama || 'User'}&background=e2e8f0`}" class="w-9 h-9 rounded-full object-cover mr-2 md:mr-3 border-2 border-slate-200 shadow-sm">
@@ -97,6 +102,10 @@ export function renderLayout() {
         </div>
     `;
 }
+
+window.kembaliKeStart = function() {
+    document.body.classList.remove('app-open');
+};
 
 window.renderSidebarMenu = function() {
     const currentUser = getFreshUser();
@@ -692,6 +701,7 @@ window.simpanAturDasbor = async function() {
 };
 
 window.navigate = function(page) {
+    document.body.classList.add('app-open');
     window.currentPage = page;
     window.renderSidebarMenu(); 
 
@@ -724,7 +734,7 @@ window.navigate = function(page) {
 
     if (!hasAccess) {
         alert("Akses Ditolak: Anda tidak memiliki wewenang untuk membuka halaman ini.");
-        window.navigate('dashboard'); 
+        window.kembaliKeStart();
         return;
     }
 
@@ -735,7 +745,7 @@ window.navigate = function(page) {
     if (page === 'tugas' && !window.cekLisensi('tugas_pegawai')) return container.innerHTML = window.renderLockedPremiumHTML('Manajemen Tugas Pegawai (Kanban)');
     if (page === 'ppdb' && !window.cekLisensi('ppdb_online')) return container.innerHTML = window.renderLockedPremiumHTML('Sistem PPDB Online & QRIS');
     if (page === 'kalender' && !window.cekLisensi('kalender_plus')) return container.innerHTML = window.renderLockedPremiumHTML('Kalender Pendidikan Terpadu');
-    if (page === 'lisensi' && !isSuperAdmin) { alert("Ditolak!"); window.navigate('dashboard'); return; }
+    if (page === 'lisensi' && !isSuperAdmin) { alert("Ditolak!"); window.kembaliKeStart(); return; }
 
     if (page === 'dashboard') {
         let savedConfig = lembaga.dashboardConfig || {};
